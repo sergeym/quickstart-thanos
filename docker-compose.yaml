@@ -24,73 +24,7 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
-      - 9081:9090
-    links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
-    restart: always
-
-  prometheus-2:
-    image: prom/prometheus:v2.14.0
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus2_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus2.yaml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.max-block-duration=2h'
-      - '--storage.tsdb.min-block-duration=2h'
-      - '--web.enable-lifecycle'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9082:9090
-    links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
-    restart: always
-
-  prometheus-3:
-    image: prom/prometheus:v2.14.0
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus3_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus3.yaml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.max-block-duration=2h'
-      - '--storage.tsdb.min-block-duration=2h'
-      - '--web.enable-lifecycle'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9083:9090
-    links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
-    depends_on:
-      - cadvisor
-    restart: always
-
-  prometheus-4:
-    image: prom/prometheus:v2.14.0
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus4_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus4.yaml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.max-block-duration=2h'
-      - '--storage.tsdb.min-block-duration=2h'
-      - '--web.enable-lifecycle'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9084:9090
+      - 127.0.0.1:9081:9090
     links:
       - cadvisor:cadvisor
       - alertmanager:alertmanager
@@ -107,62 +41,11 @@ services:
       - 'sidecar'
       - '--tsdb.path=/prometheus'
       - '--prometheus.url=http://prometheus-1:9090'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
+      - '--grpc-address=127.0.0.1:10091'
+      - '--http-address=127.0.0.1:10902'
       - '--objstore.config-file=/etc/thanos/bucket_config.yaml'
     depends_on:
       - prometheus-1
-      - minio
-    restart: always
-
-  thanos-sidecar-2:
-    image: quay.io/thanos/thanos:v0.9.0
-    volumes:
-      - ./thanos/:/etc/thanos/
-      - prometheus2_data:/prometheus
-    command:
-      - 'sidecar'
-      - '--tsdb.path=/prometheus'
-      - '--prometheus.url=http://prometheus-2:9090'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
-      - '--objstore.config-file=/etc/thanos/bucket_config.yaml'
-    depends_on:
-      - prometheus-2
-      - minio
-    restart: always
-
-  thanos-sidecar-3:
-    image: quay.io/thanos/thanos:v0.9.0
-    volumes:
-      - ./thanos/:/etc/thanos/
-      - prometheus3_data:/prometheus
-    command:
-      - 'sidecar'
-      - '--tsdb.path=/prometheus'
-      - '--prometheus.url=http://prometheus-3:9090'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
-      - '--objstore.config-file=/etc/thanos/bucket_config.yaml'
-    depends_on:
-      - prometheus-3
-      - minio
-    restart: always
-
-  thanos-sidecar-4:
-    image: quay.io/thanos/thanos:v0.9.0
-    volumes:
-      - ./thanos/:/etc/thanos/
-      - prometheus4_data:/prometheus
-    command:
-      - 'sidecar'
-      - '--tsdb.path=/prometheus'
-      - '--prometheus.url=http://prometheus-4:9090'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
-      - '--objstore.config-file=/etc/thanos/bucket_config.yaml'
-    depends_on:
-      - prometheus-4
       - minio
     restart: always
 
@@ -170,21 +53,15 @@ services:
     image: quay.io/thanos/thanos:v0.9.0
     command:
       - 'query'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
+      - '--grpc-address=127.0.0.1:10091'
+      - '--http-address=127.0.0.1:10902'
       - '--query.replica-label=replica'
       - '--store=thanos-sidecar-1:10091'
-      - '--store=thanos-sidecar-2:10091'
-      - '--store=thanos-sidecar-3:10091'
-      - '--store=thanos-sidecar-4:10091'
       - '--store=thanos-store-gateway:10091'
     ports:
-      - 10902:10902
+      - 127.0.0.1:10902:10902
     depends_on:
       - thanos-sidecar-1
-      - thanos-sidecar-2
-      - thanos-sidecar-3
-      - thanos-sidecar-4
     restart: always
 
   thanos-store-gateway:
@@ -193,8 +70,8 @@ services:
       - ./thanos/:/etc/thanos/
     command:
       - 'store'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
+      - '--grpc-address=127.0.0.1:10091'
+      - '--http-address=127.0.0.1:10902'
       - '--data-dir=/tmp/thanos/store'
       - '--objstore.config-file=/etc/thanos/bucket_config.yaml'
     depends_on:
@@ -221,8 +98,8 @@ services:
       - ./thanos/:/etc/thanos/
     command:
       - 'rule'
-      - '--grpc-address=0.0.0.0:10091'
-      - '--http-address=0.0.0.0:10902'
+      - '--grpc-address=127.0.0.1:10091'
+      - '--http-address=127.0.0.1:10902'
       - '--log.level=debug'
       - '--data-dir=/data'
       - '--eval-interval=15s'
@@ -233,7 +110,7 @@ services:
       - "--label=ruler_cluster=\"vegas\""
       - "--label=ruler_replica=\"r1\""
     ports:
-      - 10903:10902
+      - 127.0.0.1:10903:10902
     depends_on:
       - minio
       - thanos-querier
@@ -249,7 +126,7 @@ services:
       - MINIO_ACCESS_KEY=smth
       - MINIO_SECRET_KEY=Need8Chars
     ports:
-      - 9000:9000
+      - 127.0.0.1:9000:9000
   
   node-exporter:
     image: prom/node-exporter:v0.18.1
@@ -263,13 +140,13 @@ services:
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     ports:
-      - 9100:9100
+      - 127.0.0.1:9100:9100
     restart: always
 
   alertmanager:
     image: prom/alertmanager:v0.19.0
     ports:
-      - 9093:9093
+      - 127.0.0.1:9093:9093
     volumes:
       - ./alertmanager/:/etc/alertmanager/
     restart: always
@@ -284,7 +161,7 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     restart: always
 
   grafana:
@@ -292,9 +169,8 @@ services:
     user: "104"
     depends_on:
       - prometheus-1
-      - prometheus-2
     ports:
-      - 3000:3000
+      - 127.0.0.1:3000:3000
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
