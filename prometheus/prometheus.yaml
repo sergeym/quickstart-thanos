@@ -7,7 +7,7 @@ global:
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-      cluster: 'chicago'
+      cluster: 'local'
       replica: 'r1'
 
 # Load and evaluate rules in this file every 'evaluation_interval' seconds.
@@ -35,7 +35,7 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-         - targets: ['prometheus-1:9090','prometheus-2:9090']
+         - targets: ['prometheus:9090']
 
   - job_name: 'thanos'
 
@@ -43,7 +43,7 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-         - targets: ['thanos-sidecar-1:10902','thanos-sidecar-2:10902','thanos-querier:10902','thanos-store-gateway:10902','thanos-compactor:10902','thanos-ruler:10902']
+         - targets: ['thanos-sidecar-1:10902','thanos-querier:10902','thanos-store-gateway:10902','thanos-compactor:10902','thanos-ruler:10902']
 
   - job_name: 'minio'
 
